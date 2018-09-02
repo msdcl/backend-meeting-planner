@@ -14,22 +14,28 @@ let convertToLocalTime = (time) => {
 }
 
 let getEpoch = (time)=>{
-  var currentDate = new Date();
+  //var currentDate = new Date();
 
   var currentTime = time.getTime();
   
-  var localOffset = (-1) * currentDate.getTimezoneOffset() * 60000;
+  //var localOffset = (-1) * currentDate.getTimezoneOffset() * 60000;
   
-  return Math.round(new Date(currentTime+localOffset).getTime() / 1000);
+  return Math.round((currentTime)/ 1000);
 
   // let temp = new Date(time);
   // let date = new Date();
   // let offset =  date.getTimezoneOffset()
   // return temp.getTime()/1000.0;
 }
+let getTimeFromEpoch = (ts)=>{
+  let myDate = new Date(ts * 1000)
+
+    return myDate;
+}
 module.exports = {
   now: now,
   getLocalTime: getLocalTime,
   convertToLocalTime: convertToLocalTime,
-  getEpoch:getEpoch
+  getEpoch:getEpoch,
+  getTimeFromEpoch:getTimeFromEpoch
 }

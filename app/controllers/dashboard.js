@@ -95,15 +95,9 @@ let addMeeting = (req, res) => {
 
     let sendEmail = (meeting) => {
         return new Promise((resolve, reject) => {
-            email.meetingCreationEmail(meeting, req.body.userEmail, (err, info) => {
-                if (err) {
-                    logger.error(err, 'dashboard: sendCreationEmail', 10)
-                    let apiResponse = response.generate(true, 'Failed to send meeting creation email', 500, null)
-                    reject(apiResponse)
-                } else {
+            email.meetingCreationEmail(meeting, req.body.userEmail)
                     resolve(meeting);
-                }
-            });
+            
 
         })
 
@@ -157,7 +151,7 @@ let updateMeeting = (req, res) => {
 
     let doUpdate = (req, res) => {
         return new Promise((resolve, reject) => {
-           
+           console.log(req.body)
             if(check.isEmpty(req.body.startTime)){
                
                 delete req.body.startTime
@@ -193,15 +187,9 @@ let updateMeeting = (req, res) => {
 
     let sendEmail = (result) => {
         return new Promise((resolve, reject) => {
-            email.meetingUpdatedEmail(result, req.body.userEmail, (err, info) => {
-                if (err) {
-                    logger.error(err, 'dashboard: sendUpdateEmail', 10)
-                    let apiResponse = response.generate(true, 'Failed to send meeting updation email', 500, null)
-                    reject(apiResponse)
-                } else {
+            email.meetingUpdatedEmail(result, result.userEmail)
                     resolve(result);
-                }
-            });
+                
 
         })
 
@@ -293,7 +281,6 @@ let getAllMeetings = (req, res) => {
 //this function will be call when 1 min is left for meeting start
 let sendReminderOfMeeting = (estimatedStartTime,estimatedEndTime)=>{
 
-    console.log("reminder function is called")
     MeetingModel.find({
         $or: [
             { 'startTime':estimatedStartTime },
@@ -306,21 +293,18 @@ let sendReminderOfMeeting = (estimatedStartTime,estimatedEndTime)=>{
             let apiResponse = response.generate(true, 'error in getting meeting to send reminders', 400, err)
             res.send(apiResponse)
         } else {
-           console.log(result)
+        
            for(let i=0;i<result.length;i++){
+               console.log(result[i].name)
             if (sock_session.sessions[result[i].userId] != undefined) {
                 let data = {
                     reminder:true,
                     meetingInfo:result[i],
-                    text:`Meeting reminder for ${result[i].name}`
+                    text:`Reminder for meeting ${result[i].name}`
                 }
                 sock_session.sessions[result[i].userId].emit("meeting-info",data);
             }
-            email.meetingReminderEmail(result[i], (err, info) => {
-                if (err) {
-                    logger.error(err, 'dashboard: sendReminderEmail', 10)             
-                } 
-            });
+             email.meetingReminderEmail(result[i])
 
            }
         }

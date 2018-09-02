@@ -1,5 +1,5 @@
 const nodemailer = require('nodemailer');
-
+const time = require('../libs/timeLib')
 // Generate SMTP service account from ethereal.email
 
 let sendForgotPasswordEmail = (toEmail,code)=>{
@@ -32,7 +32,7 @@ let sendForgotPasswordEmail = (toEmail,code)=>{
       });
 }
 
-let meetingCreationEmail = (data,toEmail,cb)=>{
+let meetingCreationEmail = (data,toEmail)=>{
     let transporter = nodemailer.createTransport({
         service:'gmail',
        auth: {
@@ -40,32 +40,38 @@ let meetingCreationEmail = (data,toEmail,cb)=>{
            pass: 'msc11dc15'
        }
    });
-
+ let startTime = time.getTimeFromEpoch(data.startTime)
+ let endTime = time.getTimeFromEpoch(data.endTime)
    // Message object
    let message = {
        from: 'msc1994dc@gmail.com',
        to: `${toEmail}`,
-       subject: 'New meeting created',
-       text: `Hi, new meeting is created by admin. See below details \n ${data}`,
+       subject: 'New event created',
+       text: `Hi, new meeting is created by admin. See below details \n
+              Admin: ${data.createdBy}\n
+              name: ${data.name}\n
+              startTime: ${startTime}\n
+              endTime: ${endTime}\n
+              description: ${data.description}\n`,
 
    };
 
    transporter.sendMail(message, (err, info) => {
        if (err) {
            console.log('Error occurred. ' + err.message);
-           cb(err,null)
-        //   return process.exit(1);
+          
+          return process.exit(1);
        }
        
     //    console.log('Email sent: %s', info.messageId);
     //    // Preview only available when sending through an Ethereal account
     //    console.log('Email Preview URL: %s', nodemailer.getTestMessageUrl(info));
-       cb(null,info)
+     
    });
 }
 
 
-let meetingUpdatedEmail = (data,toEmail,cb)=>{
+let meetingUpdatedEmail = (data,toEmail)=>{
     let transporter = nodemailer.createTransport({
         service:'gmail',
        auth: {
@@ -73,32 +79,38 @@ let meetingUpdatedEmail = (data,toEmail,cb)=>{
            pass: 'msc11dc15'
        }
    });
-
+   let startTime = time.getTimeFromEpoch(data.startTime)
+   let endTime = time.getTimeFromEpoch(data.endTime)
    // Message object
    let message = {
        from: 'msc1994dc@gmail.com',
        to: `${toEmail}`,
        subject: 'update on meeting',
-       text: `Hi, your meeting has been updated by admin. See below details \n ${data}`,
+       text: `Hi, there is an update on an event. See below details \n
+       Admin: ${data.createdBy}\n
+       name: ${data.name}\n
+       startTime: ${startTime}\n
+       endTime: ${endTime}\n
+       description: ${data.description}\n`
 
    };
 
    transporter.sendMail(message, (err, info) => {
        if (err) {
            console.log('Error occurred. ' + err.message);
-          // return process.exit(1);
-          cb(err,null);
+         return process.exit(1);
+        
        }
 
     //    console.log('Email sent: %s', info.messageId);
     //    // Preview only available when sending through an Ethereal account
     //    console.log('Email Preview URL: %s', nodemailer.getTestMessageUrl(info));
-       cb(null,info);
+      // cb(null,info);
    });
 }
 
 
-let meetingReminderEmail = (data,cb)=>{
+let meetingReminderEmail = (data)=>{
     let transporter = nodemailer.createTransport({
         service:'gmail',
        auth: {
@@ -106,27 +118,34 @@ let meetingReminderEmail = (data,cb)=>{
            pass: 'msc11dc15'
        }
    });
-
+   let startTime = time.getTimeFromEpoch(data.startTime)
+   let endTime = time.getTimeFromEpoch(data.endTime)
+  
    // Message object
    let message = {
        from: 'msc1994dc@gmail.com',
        to: `${data.userEmail}`,
        subject: 'reminder for your meeting',
-       text: `Hi, here is the reminder for your meeting. please see below details \n ${data}`,
+       text: `Hi, yhis is reminder for the event. See below details \n
+       Admin: ${data.createdBy}\n
+       name: ${data.name}\n
+       startTime: ${startTime}\n
+       endTime: ${endTime}\n
+       description: ${data.description}\n`
 
    };
 
    transporter.sendMail(message, (err, info) => {
        if (err) {
            console.log('Error occurred. ' + err.message);
-          // return process.exit(1);
-          cb(err,null);
+          return process.exit(1);
+        
        }
 
     //    console.log('Email sent: %s', info.messageId);
     //    // Preview only available when sending through an Ethereal account
     //    console.log('Email Preview URL: %s', nodemailer.getTestMessageUrl(info));
-       cb(null,info);
+      // cb(null,info);
    });
 }
 module.exports = {

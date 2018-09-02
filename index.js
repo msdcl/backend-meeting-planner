@@ -150,7 +150,7 @@ mongoose.connection.on('open', function (err) {
     console.log("database connection open success");
     logger.info("database connection open",
       'database connection open handler', 10)
-    //  scheduler.scheduleTask();    //call a function in every 5sec
+      scheduler.scheduleTask();    //call a function in every 5sec
   }
   //process.exit(1)
 }); // enr mongoose connection open handler
