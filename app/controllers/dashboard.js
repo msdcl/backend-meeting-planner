@@ -174,7 +174,7 @@ let updateMeeting = (req, res) => {
 
                 if (err) {
                     console.log(err)
-                    let apiResponse = response.generate(true, 'updated meeting failed', 400, err)
+                    let apiResponse = response.generate(true, 'update meeting failed', 400, err)
                     reject(apiResponse)
                 } else {
                     // let apiResponse = response.generate(false, 'meeting updated', 200, result)

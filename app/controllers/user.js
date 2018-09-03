@@ -356,7 +356,7 @@ let changePassword = (req, res) => {
                         ForgotPasswordModel.remove({ 'email': req.body.email}, (err, result1) => {
                             if (err) {
                                 console.log(err)
-                                let apiResponse = response.generate(true, 'error in deleting entry from forgot passoward', 400, err)
+                                let apiResponse = response.generate(true, 'error in deleting entry from forgot passward', 400, err)
                                 res.send(apiResponse)
                             }
                         })
