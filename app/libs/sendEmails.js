@@ -126,7 +126,48 @@ let meetingReminderEmail = (data)=>{
        from: 'msc1994dc@gmail.com',
        to: `${data.userEmail}`,
        subject: 'reminder for your meeting',
-       text: `Hi, yhis is reminder for the event. See below details \n
+       text: `Hi, this is reminder for the event. See below details \n
+       Admin: ${data.createdBy}\n
+       name: ${data.name}\n
+       startTime: ${startTime}\n
+       endTime: ${endTime}\n
+       description: ${data.description}\n`
+
+   };
+
+   transporter.sendMail(message, (err, info) => {
+       if (err) {
+           console.log('Error occurred. ' + err.message);
+          return process.exit(1);
+        
+       }
+
+    //    console.log('Email sent: %s', info.messageId);
+    //    // Preview only available when sending through an Ethereal account
+    //    console.log('Email Preview URL: %s', nodemailer.getTestMessageUrl(info));
+      // cb(null,info);
+   });
+}
+
+
+
+let meetingCancelledEmail = (data)=>{
+    let transporter = nodemailer.createTransport({
+        service:'gmail',
+       auth: {
+           user: 'msc1994dc@gmail.com',
+           pass: 'msc11dc15'
+       }
+   });
+   let startTime = time.getTimeFromEpoch(data.startTime)
+   let endTime = time.getTimeFromEpoch(data.endTime)
+  
+   // Message object
+   let message = {
+       from: 'msc1994dc@gmail.com',
+       to: `${data.userEmail}`,
+       subject: 'Event cancelled',
+       text: `Hi, An event has been cancelled. See below details \n
        Admin: ${data.createdBy}\n
        name: ${data.name}\n
        startTime: ${startTime}\n
@@ -152,5 +193,6 @@ module.exports = {
     sendForgotPasswordEmail:sendForgotPasswordEmail,
     meetingCreationEmail:meetingCreationEmail,
     meetingUpdatedEmail:meetingUpdatedEmail,
-    meetingReminderEmail:meetingReminderEmail
+    meetingReminderEmail:meetingReminderEmail,
+    meetingCancelledEmail:meetingCancelledEmail
 }

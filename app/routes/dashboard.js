@@ -279,4 +279,6 @@ module.exports.setRouter = (app) => {
 	   }
 	 */ 
 
+
+	app.post(`${baseUrl}/snoozeOrDismissMeeting`,auth.authenticateUserWithHash, dashboard.updateSnoozedAndDismissed);
 }

@@ -44,6 +44,10 @@ let meetingSchema = new Schema({
   isDismissed:{
     type:Boolean,
     default:false
+  },
+  lastNotification:{
+    type:String,
+    default:''
   }
 
 

@@ -108,7 +108,8 @@ let addMeeting = (req, res) => {
                 id: shortid.generate(),
                 userId: req.body.userId,
                 text: `New meeting- '${meeting.name}'-has been created`,
-                isSeen:false
+                isSeen:false,
+                date:time.now()
                 
             })
             newMeeting.save((err, meetingText) => {
@@ -178,7 +179,7 @@ let updateMeeting = (req, res) => {
                     reject(apiResponse)
                 } else {
                     // let apiResponse = response.generate(false, 'meeting updated', 200, result)
-                    console.log(result);
+                  
                     resolve(result)
                 }
             })
@@ -201,7 +202,8 @@ let updateMeeting = (req, res) => {
                 id: shortid.generate(),
                 userId: result.userId,
                 text: `Meeting- '${result.name}'-has been updated`,
-                isSeen:false
+                isSeen:false,
+                date:time.now()
                 
             })
             updateMeeting.save((err, meetingText) => {
@@ -243,6 +245,7 @@ let updateMeeting = (req, res) => {
 }
 
 let deleteMeeting = (req, res) => {
+    
     MeetingModel.findOneAndRemove({ 'id': req.body.id }, (err, result) => {
         if (err) {
             console.log(err)
@@ -253,6 +256,38 @@ let deleteMeeting = (req, res) => {
             let apiResponse = response.generate(true, 'No such meeting found', 400, result)
             res.send(apiResponse)
         } else {
+            email.meetingCancelledEmail(result)
+
+
+            let deleteMeeting = new NotiModel({
+                id: shortid.generate(),
+                userId: result.userId,
+                text: `Meeting- '${result.name}'-has been cancelled`,
+                isSeen:false,
+                date:time.now()
+                
+            })
+            deleteMeeting.save((err, meetingText) => {
+                if (err) {
+                    console.log(err)
+                    logger.error(err.message, 'dashboard: sendAlert-delete', 10)
+                    let apiResponse = response.generate(true, 'Failed to add notification for meeting', 500, null)
+                    res.send(apiResponse)
+                } else {
+                    let data = {
+                        text:`Meeting- '${result.name}'-has been cancelled`,
+                        meetingInfo:result,
+                        delete:true
+                    }
+                 
+                    if (sock_session.sessions[result.userId] != undefined) {
+                      
+                        sock_session.sessions[result.userId].emit("meeting-info", data);
+                    }
+            
+                }
+            })
+
             let apiResponse = response.generate(false, 'meeting deletion successful', 200, result)
             res.send(apiResponse)
 
@@ -265,7 +300,15 @@ let getAllMeetings = (req, res) => {
     let startTime = req.body.startTime;
 
     let endTime = req.body.endTime;
-    MeetingModel.find({ $and: [{ 'userId': req.body.userId }, { 'startTime': { $gte: startTime } }, { 'startTime': { $lte: endTime } }] }, (err, result) => {
+    MeetingModel.find({ 
+          $or: [
+            { $and:[{'userId':req.body.userId}, {'startTime':{$gte:startTime}},{'startTime':{$lte:endTime}}] },
+            { $and:[{'userId':req.body.userId}, {'endTime':{$gte:startTime}},{'endTime':{$lte:endTime}}] },
+            { $and:[{'userId':req.body.userId}, {'startTime':{$lt:startTime}},{'endTime':{$gt:endTime}}] }
+        ]
+     }, 
+    
+        (err, result) => {
 
         if (err) {
             console.log(err)
@@ -284,7 +327,7 @@ let sendReminderOfMeeting = (estimatedStartTime,estimatedEndTime)=>{
     MeetingModel.find({
         $or: [
             { 'startTime':estimatedStartTime },
-            { $and: [{'isSnoozed':true}, {'isDismissed': false},{'endTime':{$lt: estimatedEndTime}}] }
+            { $and: [{'isSnoozed':true}, {'isDismissed': false},{'endTime':{$gt: estimatedEndTime}},{'lastNotification': {$lte:estimatedEndTime-5}}] }
         ]
     }, (err, result) => {
 
@@ -295,7 +338,10 @@ let sendReminderOfMeeting = (estimatedStartTime,estimatedEndTime)=>{
         } else {
         
            for(let i=0;i<result.length;i++){
+               
                console.log(result[i].name)
+               updateMeetingInternally(result[i]);
+               addNotificationOfReminder(result[i])
             if (sock_session.sessions[result[i].userId] != undefined) {
                 let data = {
                     reminder:true,
@@ -305,12 +351,30 @@ let sendReminderOfMeeting = (estimatedStartTime,estimatedEndTime)=>{
                 sock_session.sessions[result[i].userId].emit("meeting-info",data);
             }
              email.meetingReminderEmail(result[i])
-
+            
            }
+
         }
     })
 }
 
+let addNotificationOfReminder = (result)=>{
+    let updateMeeting = new NotiModel({
+        id: shortid.generate(),
+        userId: result.userId,
+        text: `Reminder for '${result.name}'`,
+        isSeen:false,
+        date:time.now()
+        
+    })
+    updateMeeting.save((err, meetingText) => {
+        if (err) {
+            console.log(err)
+            logger.error(err.message, 'dashboard: addNotificationOfReminder-reminder', 10)
+           
+        } 
+    })
+}
 let getAllTextNotifications = (req, res) => {
 
    
@@ -348,6 +412,36 @@ let marknotificationAsSeen = (req,res)=>{
         }
     })
 }
+
+let updateMeetingInternally = (result)=>{
+    let update = {'isSnoozed':false};
+    let query = { 'id': result.id };
+    let options = { new: true }
+    MeetingModel.findOneAndUpdate(query, {$set: {'isSnoozed':false}}, options, (err, result) => {
+
+        if (err) {
+            console.log(err)
+            console.log("error while updating once snoozed")
+        }
+    })
+}
+
+let updateSnoozedAndDismissed = (req,res)=>{
+    let update = req.body;
+    let query = { 'id': req.body.id };
+    let options = { new: true }
+    MeetingModel.findOneAndUpdate(query, update, options, (err, result) => {
+
+        if (err) {
+            console.log(err)
+            let apiResponse = response.generate(true, 'update snoozed meeting failed', 400, err)
+            res.send(apiResponse)
+        } else {
+             let apiResponse = response.generate(false, 'snooze meeting updated', 200, result)
+            res.send(apiResponse)
+        }
+    })
+}
 module.exports = {
     getAllNormalUsers: getAllNormalUsers,
     addMeeting: addMeeting,
@@ -356,5 +450,6 @@ module.exports = {
     getAllMeetings: getAllMeetings,
     sendReminderOfMeeting:sendReminderOfMeeting,
     getAllTextNotifications:getAllTextNotifications,
-    marknotificationAsSeen:marknotificationAsSeen
+    marknotificationAsSeen:marknotificationAsSeen,
+    updateSnoozedAndDismissed:updateSnoozedAndDismissed
 }

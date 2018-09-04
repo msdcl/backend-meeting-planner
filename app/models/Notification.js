@@ -20,6 +20,10 @@ let notification = new Schema({
   },
   isSeen:{
     type:Boolean
+  },
+  date:{
+    type:Date,
+    default:''
   }
 
 
