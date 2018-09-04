@@ -327,7 +327,7 @@ let sendReminderOfMeeting = (estimatedStartTime,estimatedEndTime)=>{
     MeetingModel.find({
         $or: [
             { 'startTime':estimatedStartTime },
-            { $and: [{'isSnoozed':true}, {'isDismissed': false},{'endTime':{$gt: estimatedEndTime}},{'lastNotification': {$lte:estimatedEndTime-5}}] }
+            { $and: [{'isSnoozed':true}, {'isDismissed': false},{'endTime':{$gt: estimatedEndTime}},{'lastNotification': estimatedEndTime-5}] }
         ]
     }, (err, result) => {
 
