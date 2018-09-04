@@ -439,7 +439,7 @@ let updateSnoozedAndDismissed = (req,res)=>{
             let apiResponse = response.generate(true, 'update snoozed meeting failed', 400, err)
             res.send(apiResponse)
         } else {
-            console.log(result);
+           // console.log(result);
              let apiResponse = response.generate(false, 'snooze meeting updated', 200, result)
             res.send(apiResponse)
         }
