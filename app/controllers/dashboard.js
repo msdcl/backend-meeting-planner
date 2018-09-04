@@ -428,6 +428,7 @@ let updateMeetingInternally = (result)=>{
 }
 
 let updateSnoozedAndDismissed = (req,res)=>{
+    req.body.lastNotification= time.getEpoch(new Date());
     let update = req.body;
     let query = { 'id': req.body.id };
     let options = { new: true }
